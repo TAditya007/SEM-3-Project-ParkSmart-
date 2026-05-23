@@ -13,7 +13,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
+
 
 public class SlotPanel extends JPanel {
     private final SlotService slotService;
