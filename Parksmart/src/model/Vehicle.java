@@ -12,6 +12,7 @@ public class Vehicle {
     private String exitTime;
     private String status;
     private List<String> history;
+    private List<String> slotVisitHistory;
 
     public Vehicle(String vehicleNumber, String ownerName, String vehicleType,
                    String slotId, String entryTime, String exitTime, String status) {
@@ -23,8 +24,10 @@ public class Vehicle {
         this.exitTime = exitTime;
         this.status = status;
         this.history = new ArrayList<>();
+        this.slotVisitHistory = new ArrayList<>();
 
         this.history.add(entryTime + " - Vehicle entered into slot " + slotId + " [" + status + "]");
+        this.slotVisitHistory.add(slotId);
     }
 
     public String getVehicleNumber() {
@@ -59,8 +62,15 @@ public class Vehicle {
         return history;
     }
 
+    public List<String> getSlotVisitHistory() {
+        return slotVisitHistory;
+    }
+
     public void setSlotId(String slotId) {
         this.slotId = slotId;
+        if (slotId != null && !slotId.trim().isEmpty() && !"Not Assigned".equalsIgnoreCase(slotId)) {
+            this.slotVisitHistory.add(slotId);
+        }
     }
 
     public void setEntryTime(String entryTime) {
@@ -77,5 +87,18 @@ public class Vehicle {
 
     public void addHistory(String event) {
         history.add(event);
+    }
+
+    public void addSlotVisit(String slotDisplayId) {
+        if (slotDisplayId != null && !slotDisplayId.trim().isEmpty()) {
+            slotVisitHistory.add(slotDisplayId);
+        }
+    }
+
+    public String getLastVisitedSlot() {
+        if (slotVisitHistory == null || slotVisitHistory.isEmpty()) {
+            return "Not Assigned";
+        }
+        return slotVisitHistory.get(slotVisitHistory.size() - 1);
     }
 }

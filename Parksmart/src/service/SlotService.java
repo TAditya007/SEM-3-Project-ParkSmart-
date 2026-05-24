@@ -11,6 +11,7 @@ public class SlotService {
     private BSTSlots bstSlots;
     private FenwickTree fenwickTree;
     private List<ParkingSlot> slotList;
+    private int nextSlotId = 1;
 
     public SlotService() {
         bstSlots = new BSTSlots();
@@ -24,51 +25,108 @@ public class SlotService {
             return;
         }
 
-        ParkingSlot s1 = new ParkingSlot(1, "ALPHA-A12", "ALPHA", "A", "Compact", "Occupied", false);
-        s1.assignVehicle("TS09AB1234");
-        s1.setLastEntryTime("18-05-2026 08:42 AM");
-        s1.setLastExitTime("--");
-        addSlot(s1);
+        addBlockSlots("ALPHA");
+        addBlockSlots("BETA");
+        addBlockSlots("GAMMA");
+        addBlockSlots("DELTA");
+        addBlockSlots("EPSILON");
+    }
 
-        ParkingSlot s2 = new ParkingSlot(2, "ALPHA-B07", "ALPHA", "B", "SUV", "Occupied", false);
-        s2.assignVehicle("TS09CD5678");
-        s2.setLastEntryTime("18-05-2026 09:05 AM");
-        s2.setLastExitTime("--");
-        addSlot(s2);
+    private void addBlockSlots(String blockName) {
+        addSlotGroup(blockName, "A", 30, "Compact");
+        addSlotGroup(blockName, "B", 50, "Bike");
+        addSlotGroup(blockName, "EV", 10, "EV");
+    }
 
-        ParkingSlot s3 = new ParkingSlot(3, "BETA-A03", "BETA", "A", "Compact", "Available", true);
-        s3.setLastEntryTime("17-05-2026 06:20 PM");
-        s3.setLastExitTime("17-05-2026 10:10 PM");
-        addSlot(s3);
+    private void addSlotGroup(String blockName, String slotGroup, int count, String slotType) {
+        for (int i = 1; i <= count; i++) {
+            String slotNumber = slotGroup + i;
+            String status = getDefaultStatus(slotGroup, i);
+            boolean available = "Available".equalsIgnoreCase(status);
 
-        ParkingSlot s4 = new ParkingSlot(4, "BETA-B08", "BETA", "B", "Bike", "Occupied", false);
-        s4.assignVehicle("TS10KL5678");
-        s4.setLastEntryTime("18-05-2026 08:55 AM");
-        s4.setLastExitTime("--");
-        addSlot(s4);
+            ParkingSlot slot = new ParkingSlot(
+                    nextSlotId++,
+                    blockName,
+                    slotGroup,
+                    slotNumber,
+                    slotType,
+                    status,
+                    available
+            );
 
-        ParkingSlot s5 = new ParkingSlot(5, "GAMMA-EV03", "GAMMA", "EV", "EV", "Charging", false);
-        s5.assignVehicle("TS11MN9012");
-        s5.setLastEntryTime("18-05-2026 09:03 AM");
-        s5.setLastExitTime("--");
-        addSlot(s5);
+            applyDemoData(slot, i);
+            addSlot(slot);
+        }
+    }
 
-        ParkingSlot s6 = new ParkingSlot(6, "DELTA-A21", "DELTA", "A", "Compact", "Occupied", false);
-        s6.assignVehicle("TS12PQ3456");
-        s6.setLastEntryTime("18-05-2026 09:11 AM");
-        s6.setLastExitTime("--");
-        addSlot(s6);
+    private String getDefaultStatus(String slotGroup, int index) {
+        if ("EV".equalsIgnoreCase(slotGroup)) {
+            if (index % 4 == 0) {
+                return "Charging";
+            } else if (index % 3 == 0) {
+                return "Occupied";
+            } else {
+                return "Available";
+            }
+        } else {
+            if (index % 5 == 0 || index % 7 == 0) {
+                return "Occupied";
+            } else {
+                return "Available";
+            }
+        }
+    }
 
-        ParkingSlot s7 = new ParkingSlot(7, "EPSILON-B14", "EPSILON", "B", "Bike", "Occupied", false);
-        s7.assignVehicle("TS13RS7890");
-        s7.setLastEntryTime("18-05-2026 09:18 AM");
-        s7.setLastExitTime("--");
-        addSlot(s7);
+    private void applyDemoData(ParkingSlot slot, int index) {
+        if ("Occupied".equalsIgnoreCase(slot.getStatus()) || "Charging".equalsIgnoreCase(slot.getStatus())) {
+            String vehicleNumber = generateVehicleNumber(index, slot.getBlockName(), slot.getSlotGroup());
+            slot.assignVehicle(vehicleNumber);
+            slot.setLastEntryTime(generateEntryTime(index));
+            slot.setLastExitTime("--");
+            slot.addHistory("Vehicle entered at " + slot.getLastEntryTime());
+        } else {
+            slot.setLastEntryTime(generatePastEntryTime(index));
+            slot.setLastExitTime(generatePastExitTime(index));
+            slot.addHistory("Last vehicle exited at " + slot.getLastExitTime());
+        }
 
-        ParkingSlot s8 = new ParkingSlot(8, "EPSILON-EV05", "EPSILON", "EV", "EV", "Available", true);
-        s8.setLastEntryTime("16-05-2026 01:10 PM");
-        s8.setLastExitTime("16-05-2026 03:40 PM");
-        addSlot(s8);
+        slot.setNotes(slot.getBlockName() + " " + slot.getSlotGroup() + " section slot for " + slot.getSlotType() + " vehicles.");
+    }
+
+    private String generateVehicleNumber(int index, String blockName, String slotGroup) {
+        int blockCode = Math.abs(blockName.hashCode()) % 90 + 10;
+        int seriesCode = Math.abs(slotGroup.hashCode()) % 9000 + 1000;
+        return "TS" + blockCode + "AB" + seriesCode;
+    }
+
+    private String generateEntryTime(int index) {
+        int day = 10 + (index % 9);
+        int hour = 8 + (index % 6);
+        int minute = 10 + ((index * 7) % 50);
+        String amPm = hour >= 12 ? "PM" : "AM";
+        int displayHour = hour > 12 ? hour - 12 : hour;
+        if (displayHour == 0) displayHour = 12;
+        return String.format("%02d-05-2026 %02d:%02d %s", day, displayHour, minute, amPm);
+    }
+
+    private String generatePastEntryTime(int index) {
+        int day = 1 + (index % 20);
+        int hour = 7 + (index % 8);
+        int minute = 5 + ((index * 3) % 50);
+        String amPm = hour >= 12 ? "PM" : "AM";
+        int displayHour = hour > 12 ? hour - 12 : hour;
+        if (displayHour == 0) displayHour = 12;
+        return String.format("%02d-05-2026 %02d:%02d %s", day, displayHour, minute, amPm);
+    }
+
+    private String generatePastExitTime(int index) {
+        int day = 1 + (index % 20);
+        int hour = 9 + (index % 8);
+        int minute = 15 + ((index * 5) % 40);
+        String amPm = hour >= 12 ? "PM" : "AM";
+        int displayHour = hour > 12 ? hour - 12 : hour;
+        if (displayHour == 0) displayHour = 12;
+        return String.format("%02d-05-2026 %02d:%02d %s", day, displayHour, minute, amPm);
     }
 
     public void addSlot(ParkingSlot slot) {
@@ -90,10 +148,33 @@ public class SlotService {
         return count;
     }
 
+    public ParkingSlot getSlotByDisplayId(String displaySlotId) {
+        for (ParkingSlot slot : slotList) {
+            if (slot.getDisplaySlotId().equalsIgnoreCase(displaySlotId)) {
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    public List<ParkingSlot> getSlotsByBlockAndGroup(String blockName, String slotGroup) {
+        List<ParkingSlot> filtered = new ArrayList<>();
+        for (ParkingSlot slot : slotList) {
+            if (slot.getBlockName().equalsIgnoreCase(blockName)
+                    && slot.getSlotGroup().equalsIgnoreCase(slotGroup)) {
+                filtered.add(slot);
+            }
+        }
+        return filtered;
+    }
+
     public boolean parkVehicleInFirstAvailableSlot(String vehicleNumber) {
         for (ParkingSlot slot : slotList) {
             if (slot.isAvailable()) {
                 slot.assignVehicle(vehicleNumber);
+                slot.setLastEntryTime(generateEntryTime(slot.getSlotId()));
+                slot.setLastExitTime("--");
+                slot.addHistory("Vehicle " + vehicleNumber + " parked at " + slot.getLastEntryTime());
                 return true;
             }
         }
@@ -104,6 +185,8 @@ public class SlotService {
         for (ParkingSlot slot : slotList) {
             if (!slot.isAvailable() && vehicleNumber.equals(slot.getOccupiedVehicleNumber())) {
                 slot.releaseSlot();
+                slot.setLastExitTime(generatePastExitTime(slot.getSlotId()));
+                slot.addHistory("Vehicle " + vehicleNumber + " exited at " + slot.getLastExitTime());
                 return true;
             }
         }

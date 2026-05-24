@@ -1,21 +1,40 @@
 package gui;
 
+import model.ParkingSlot;
+import model.Reservation;
+import model.Vehicle;
 import service.AnalyticsService;
+import service.ReservationService;
+import service.SlotService;
+import service.VehicleService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class AnalyticsPanel extends JPanel {
     private final AnalyticsService analyticsService;
+    private final VehicleService vehicleService;
+    private final SlotService slotService;
+    private final ReservationService reservationService;
+
     private JTable rankingTable;
     private DefaultTableModel tableModel;
     private JTextArea insightArea;
     private JPanel metricGrid;
 
-    public AnalyticsPanel(AnalyticsService analyticsService) {
+    public AnalyticsPanel(AnalyticsService analyticsService,
+                          VehicleService vehicleService,
+                          SlotService slotService,
+                          ReservationService reservationService) {
         this.analyticsService = analyticsService;
+        this.vehicleService = vehicleService;
+        this.slotService = slotService;
+        this.reservationService = reservationService;
 
         setLayout(new BorderLayout(18, 18));
         setBackground(UIHelper.APP_BG);
@@ -33,7 +52,7 @@ public class AnalyticsPanel extends JPanel {
         titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.Y_AXIS));
 
         JLabel title = UIHelper.createTitleLabel("Analytics Center");
-        JLabel subtitle = UIHelper.createSubtitleLabel("Revenue, congestion, and parking performance insights");
+        JLabel subtitle = UIHelper.createSubtitleLabel("Live occupancy, revenue estimate, reservation flow, and block performance");
 
         titleBox.add(title);
         titleBox.add(Box.createVerticalStrut(5));
@@ -72,28 +91,6 @@ public class AnalyticsPanel extends JPanel {
     private JPanel createMetricGrid() {
         JPanel grid = UIHelper.createTransparentPanel();
         grid.setLayout(new GridLayout(1, 4, 16, 16));
-
-        grid.add(UIHelper.createStatCard(
-                "Total Records",
-                String.valueOf(analyticsService.getAnalyticsRecords().size()),
-                "Analytics records tracked"
-        ));
-        grid.add(UIHelper.createStatCard(
-                "Revenue",
-                "₹18,450",
-                "Fenwick-based cumulative tracking"
-        ));
-        grid.add(UIHelper.createStatCard(
-                "Peak Occupancy",
-                "84%",
-                "Highest observed utilization"
-        ));
-        grid.add(UIHelper.createStatCard(
-                "Optimization",
-                "Ready",
-                "Greedy + DP analysis"
-        ));
-
         return grid;
     }
 
@@ -108,9 +105,9 @@ public class AnalyticsPanel extends JPanel {
     }
 
     private JPanel createRankingCard() {
-        JPanel card = createSectionCard("Zone Ranking");
+        JPanel card = createSectionCard("Block Ranking");
 
-        String[] columns = {"Rank", "Zone", "Occupancy", "Revenue"};
+        String[] columns = {"Rank", "Block", "Occupancy", "Approx Revenue"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -124,7 +121,7 @@ public class AnalyticsPanel extends JPanel {
         rankingTable.getColumnModel().getColumn(0).setPreferredWidth(60);
         rankingTable.getColumnModel().getColumn(1).setPreferredWidth(120);
         rankingTable.getColumnModel().getColumn(2).setPreferredWidth(100);
-        rankingTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+        rankingTable.getColumnModel().getColumn(3).setPreferredWidth(120);
 
         JScrollPane scrollPane = UIHelper.wrapScroll(rankingTable, UIHelper.PANEL_BG);
         card.add(scrollPane, BorderLayout.CENTER);
@@ -152,9 +149,11 @@ public class AnalyticsPanel extends JPanel {
         return card;
     }
 
-    private void refreshAnalytics() {
+    public void refreshAnalytics() {
         loadAnalyticsData();
         refreshMetricGrid();
+        revalidate();
+        repaint();
     }
 
     private void refreshMetricGrid() {
@@ -163,25 +162,31 @@ public class AnalyticsPanel extends JPanel {
         }
 
         metricGrid.removeAll();
+
+        int totalVehicles = vehicleService.getAllVehicles().size();
+        int approxProfit = calculateApproxProfit();
+        int currentOccupancy = calculateCurrentOccupancyPercent();
+        int confirmedReservations = reservationService.getConfirmedReservationCount();
+
         metricGrid.add(UIHelper.createStatCard(
-                "Total Records",
-                String.valueOf(analyticsService.getAnalyticsRecords().size()),
-                "Analytics records tracked"
+                "Vehicles Tracked",
+                String.valueOf(totalVehicles),
+                "Vehicle records currently available"
         ));
         metricGrid.add(UIHelper.createStatCard(
-                "Revenue",
-                "₹18,450",
-                "Fenwick-based cumulative tracking"
+                "Approx Profit",
+                "₹" + approxProfit,
+                "Estimated from live parking and reservation data"
         ));
         metricGrid.add(UIHelper.createStatCard(
-                "Peak Occupancy",
-                "84%",
-                "Highest observed utilization"
+                "Current Occupancy",
+                currentOccupancy + "%",
+                "Live occupied-slot percentage"
         ));
         metricGrid.add(UIHelper.createStatCard(
-                "Optimization",
-                "Ready",
-                "Greedy + DP analysis"
+                "Confirmed Reservations",
+                String.valueOf(confirmedReservations),
+                "Current confirmed reservation count"
         ));
 
         metricGrid.revalidate();
@@ -195,36 +200,168 @@ public class AnalyticsPanel extends JPanel {
 
         tableModel.setRowCount(0);
 
-        int[] usageData = {92, 84, 76, 61};
-        int[] sortedUsage = analyticsService.sortUsageData(usageData);
+        List<BlockMetric> blockMetrics = buildBlockMetrics();
+        blockMetrics.sort(Comparator
+                .comparingInt(BlockMetric::getOccupancyPercent).reversed()
+                .thenComparingInt(BlockMetric::getRevenue).reversed());
 
-        String[] zones = {"Block B", "Block A", "Block C", "EV Zone"};
-        String[] revenues = {"₹6,250", "₹5,140", "₹4,380", "₹2,680"};
-
-        for (int i = 0; i < sortedUsage.length && i < zones.length && i < revenues.length; i++) {
+        for (int i = 0; i < blockMetrics.size(); i++) {
+            BlockMetric metric = blockMetrics.get(i);
             tableModel.addRow(new Object[]{
                     i + 1,
-                    zones[i],
-                    sortedUsage[i] + "%",
-                    revenues[i]
+                    metric.getBlockName(),
+                    metric.getOccupancyPercent() + "%",
+                    "₹" + metric.getRevenue()
             });
         }
 
+        int activeCars = countActiveVehiclesByType("Car");
+        int activeBikes = countActiveVehiclesByType("Bike");
+        int activeEVs = countActiveVehiclesByType("EV");
+        int chargingNow = countVehiclesByStatus("Charging");
+        int parkedNow = countVehiclesByStatus("Parked");
+        int emptySlots = slotService.getAvailableSlotCount();
+        int confirmedReservations = reservationService.getConfirmedReservationCount();
+        int pendingReservations = reservationService.getPendingReservationCount();
+        int cancelledReservations = reservationService.getCancelledReservationCount();
+
+        BlockMetric busiestBlock = blockMetrics.isEmpty() ? null : blockMetrics.get(0);
+
         insightArea.setText(
-                "Analytics Records: " + analyticsService.getAnalyticsRecords().size() + "\n\n" +
-                "• Block B continues to show the highest demand and strongest revenue output.\n\n" +
-                "• Entry-side congestion is increasing during the mid-morning window.\n\n" +
-                "• EV zone utilization is moderate and can support more incoming vehicles.\n\n" +
-                "• Reservation-driven allocation is helping reduce random slot conflicts.\n\n" +
-                "• Sorting and optimization modules are connected to the analytics service."
+                "• Analytics is now calculated from live slot, vehicle, and reservation services.\n\n" +
+                "• Busiest block: " + (busiestBlock != null ? busiestBlock.getBlockName() : "-") +
+                " with " + (busiestBlock != null ? busiestBlock.getOccupancyPercent() : 0) + "% occupancy.\n\n" +
+                "• Active vehicles by type -> Cars: " + activeCars +
+                ", Bikes: " + activeBikes +
+                ", EVs: " + activeEVs + ".\n\n" +
+                "• Vehicles currently parked: " + parkedNow +
+                " | Vehicles charging: " + chargingNow + ".\n\n" +
+                "• Empty slots available across all blocks: " + emptySlots + ".\n\n" +
+                "• Reservation summary -> Confirmed: " + confirmedReservations +
+                ", Pending: " + pendingReservations +
+                ", Cancelled: " + cancelledReservations + ".\n\n" +
+                "• Approx profit estimate: ₹" + calculateApproxProfit() + ".\n\n" +
+                "• Optimization records available: " + analyticsService.getAnalyticsRecords().size()
         );
+    }
+
+    private int calculateApproxProfit() {
+        int total = 0;
+
+        for (Vehicle vehicle : vehicleService.getAllVehicles()) {
+            if ("Charging".equalsIgnoreCase(vehicle.getStatus())) {
+                total += 180;
+            } else if ("Parked".equalsIgnoreCase(vehicle.getStatus())) {
+                if ("EV".equalsIgnoreCase(vehicle.getVehicleType())) {
+                    total += 150;
+                } else if ("Bike".equalsIgnoreCase(vehicle.getVehicleType())) {
+                    total += 70;
+                } else {
+                    total += 100;
+                }
+            } else if ("Exited".equalsIgnoreCase(vehicle.getStatus())) {
+                total += 40;
+            }
+        }
+
+        for (Reservation reservation : reservationService.getAllReservations()) {
+            if ("Confirmed".equalsIgnoreCase(reservation.getStatus())) {
+                total += 60;
+            } else if ("Pending".equalsIgnoreCase(reservation.getStatus())) {
+                total += 20;
+            }
+        }
+
+        return total;
+    }
+
+    private int calculateCurrentOccupancyPercent() {
+        int totalSlots = slotService.getAllSlots().size();
+        if (totalSlots == 0) {
+            return 0;
+        }
+
+        int occupied = totalSlots - slotService.getAvailableSlotCount();
+        return (int) Math.round((occupied * 100.0) / totalSlots);
+    }
+
+    private List<BlockMetric> buildBlockMetrics() {
+        String[] blocks = {"ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON"};
+        List<BlockMetric> metrics = new ArrayList<>();
+
+        for (String block : blocks) {
+            int totalSlots = 0;
+            int occupiedSlots = 0;
+            int revenue = 0;
+
+            for (ParkingSlot slot : slotService.getAllSlots()) {
+                if (slot.getBlockName().equalsIgnoreCase(block)) {
+                    totalSlots++;
+
+                    if (!slot.isAvailable()) {
+                        occupiedSlots++;
+
+                        if ("EV".equalsIgnoreCase(slot.getSlotGroup())) {
+                            revenue += 180;
+                        } else if ("B".equalsIgnoreCase(slot.getSlotGroup())) {
+                            revenue += 70;
+                        } else {
+                            revenue += 100;
+                        }
+                    }
+                }
+            }
+
+            for (Reservation reservation : reservationService.getAllReservations()) {
+                if (reservation.getSlotId() != null
+                        && reservation.getSlotId().toUpperCase().startsWith(block + "-")
+                        && "Confirmed".equalsIgnoreCase(reservation.getStatus())) {
+                    revenue += 60;
+                }
+            }
+
+            int occupancyPercent = totalSlots == 0 ? 0
+                    : (int) Math.round((occupiedSlots * 100.0) / totalSlots);
+
+            metrics.add(new BlockMetric(block, occupiedSlots, occupancyPercent, revenue));
+        }
+
+        return metrics;
+    }
+
+    private int countActiveVehiclesByType(String type) {
+        int count = 0;
+
+        for (Vehicle vehicle : vehicleService.getAllVehicles()) {
+            boolean active = "Parked".equalsIgnoreCase(vehicle.getStatus())
+                    || "Charging".equalsIgnoreCase(vehicle.getStatus());
+
+            if (active && vehicle.getVehicleType() != null
+                    && vehicle.getVehicleType().equalsIgnoreCase(type)) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int countVehiclesByStatus(String status) {
+        int count = 0;
+
+        for (Vehicle vehicle : vehicleService.getAllVehicles()) {
+            if (vehicle.getStatus() != null && vehicle.getStatus().equalsIgnoreCase(status)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private void runOptimization() {
         analyticsService.runOptimization();
         refreshAnalytics();
 
-        insightArea.append("\n\n[Optimization] Greedy allocation and dynamic programming analysis completed.");
+        insightArea.append("\n\n[Optimization] Greedy allocation and dynamic programming analysis completed with refreshed live metrics.");
 
         JOptionPane.showMessageDialog(
                 this,
@@ -232,5 +369,32 @@ public class AnalyticsPanel extends JPanel {
                 "Analytics Updated",
                 JOptionPane.INFORMATION_MESSAGE
         );
+    }
+
+    private static class BlockMetric {
+        private final String blockName;
+        
+        private final int occupancyPercent;
+        private final int revenue;
+
+        public BlockMetric(String blockName, int occupiedSlots, int occupancyPercent, int revenue) {
+            this.blockName = blockName;
+            this.occupancyPercent = occupancyPercent;
+            this.revenue = revenue;
+        }
+
+        public String getBlockName() {
+            return blockName;
+        }
+
+        
+
+        public int getOccupancyPercent() {
+            return occupancyPercent;
+        }
+
+        public int getRevenue() {
+            return revenue;
+        }
     }
 }

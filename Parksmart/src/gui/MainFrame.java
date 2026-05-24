@@ -4,8 +4,8 @@ import service.AnalyticsService;
 import service.ReservationService;
 import service.RouteService;
 import service.SlotService;
-import service.VehicleService;
 import service.UserService;
+import service.VehicleService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -368,6 +368,8 @@ public class MainFrame extends JFrame {
         if ("ADMIN".equalsIgnoreCase(currentRole)) {
             sidebarPanel.add(createNavButton("Analytics", "ANALYTICS"));
             sidebarPanel.add(Box.createVerticalStrut(10));
+            sidebarPanel.add(createNavButton("Users", "USERS"));
+            sidebarPanel.add(Box.createVerticalStrut(10));
         }
 
         sidebarPanel.revalidate();
@@ -389,11 +391,36 @@ public class MainFrame extends JFrame {
                 analyticsService
         );
 
-        slotPanel = new SlotPanel(slotService, this::refreshAllPanels);
-        vehiclePanel = new VehiclePanel(vehicleService, slotService, this::refreshAllPanels);
-        reservationPanel = new ReservationPanel(reservationService, this::refreshAllPanels);
+        slotPanel = new SlotPanel(
+                slotService,
+                vehicleService,
+                reservationService,
+                this::refreshAllPanels
+        );
+
+        vehiclePanel = new VehiclePanel(
+                vehicleService,
+                slotService,
+                reservationService,
+                this::refreshAllPanels
+        );
+
+        reservationPanel = new ReservationPanel(
+                reservationService,
+                vehicleService,
+                slotService,
+                this::refreshAllPanels
+        );
+
         routePanel = new RoutePanel(routeService);
-        analyticsPanel = new AnalyticsPanel(analyticsService);
+
+        analyticsPanel = new AnalyticsPanel(
+                analyticsService,
+                vehicleService,
+                slotService,
+                reservationService
+        );
+
         userManagementPanel = new UserManagementPanel(userService, this::refreshAllPanels);
 
         contentPanel.add(dashboardPanel, "DASHBOARD");
@@ -427,9 +454,13 @@ public class MainFrame extends JFrame {
         if (reservationPanel != null) {
             reservationPanel.refreshTable();
         }
-
-        contentPanel.revalidate();
-        contentPanel.repaint();
+       if (analyticsPanel != null) {
+            analyticsPanel.refreshAnalytics();
+        }
+        if (contentPanel != null) {
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        }
     }
 
     private JPanel createPlaceholderPage() {

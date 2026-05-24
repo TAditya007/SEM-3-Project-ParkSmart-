@@ -1,7 +1,9 @@
 package gui;
 
 import model.ParkingSlot;
+import model.Reservation;
 import model.Vehicle;
+import service.ReservationService;
 import service.SlotService;
 import service.VehicleService;
 
@@ -21,6 +23,7 @@ import java.util.regex.Pattern;
 public class VehiclePanel extends JPanel {
     private final VehicleService vehicleService;
     private final SlotService slotService;
+    private final ReservationService reservationService;
     private final Runnable onDataChanged;
 
     private JTable vehicleTable;
@@ -31,9 +34,13 @@ public class VehiclePanel extends JPanel {
     private JComboBox<String> dateFilter;
     private TableRowSorter<DefaultTableModel> sorter;
 
-    public VehiclePanel(VehicleService vehicleService, SlotService slotService, Runnable onDataChanged) {
+    public VehiclePanel(VehicleService vehicleService,
+                        SlotService slotService,
+                        ReservationService reservationService,
+                        Runnable onDataChanged) {
         this.vehicleService = vehicleService;
         this.slotService = slotService;
+        this.reservationService = reservationService;
         this.onDataChanged = onDataChanged;
 
         setLayout(new BorderLayout(18, 18));
@@ -55,7 +62,7 @@ public class VehiclePanel extends JPanel {
         titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.Y_AXIS));
 
         JLabel title = UIHelper.createTitleLabel("Vehicle Management");
-        JLabel subtitle = UIHelper.createSubtitleLabel("Search vehicles, filter records by time, and inspect vehicle history");
+        JLabel subtitle = UIHelper.createSubtitleLabel("Search vehicles, inspect slot usage, reservation links, and 6-month history");
 
         titleBox.add(title);
         titleBox.add(Box.createVerticalStrut(5));
@@ -109,11 +116,15 @@ public class VehiclePanel extends JPanel {
         JButton removeBtn = UIHelper.createButton("Exit Selected");
         removeBtn.addActionListener(e -> removeSelectedVehicle());
 
+        JButton historyBtn = UIHelper.createButton("History");
+        historyBtn.addActionListener(e -> searchVehicleHistory());
+
         JButton refreshBtn = UIHelper.createButton("Refresh");
         refreshBtn.addActionListener(e -> refreshTable());
 
         actions.add(addVehicleBtn);
         actions.add(removeBtn);
+        actions.add(historyBtn);
         actions.add(refreshBtn);
 
         rightBox.add(filterPanel, BorderLayout.NORTH);
@@ -148,7 +159,7 @@ public class VehiclePanel extends JPanel {
 
         vehicleTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && vehicleTable.getSelectedRow() != -1) {
-                showVehicleHistory();
+                showVehicleDetails();
             }
         });
 
@@ -234,7 +245,7 @@ public class VehiclePanel extends JPanel {
         if (vehicleNumber == null || vehicleNumber.trim().isEmpty()) {
             return;
         }
-        vehicleNumber = vehicleNumber.trim();
+        vehicleNumber = vehicleNumber.trim().toUpperCase();
 
         for (Vehicle vehicle : vehicleService.getAllVehicles()) {
             if (vehicle.getVehicleNumber().equalsIgnoreCase(vehicleNumber)) {
@@ -272,21 +283,24 @@ public class VehiclePanel extends JPanel {
         String status = (freeSlot != null && "EV".equalsIgnoreCase(freeSlot.getSlotGroup())) ? "Charging" : "Parked";
 
         Vehicle newVehicle = new Vehicle(
-            vehicleNumber,
-            ownerName,
-            vehicleType,
-            slotDisplay,
-            entryTime,
-            "--",
-            status
-    );
-    newVehicle.addHistory(entryTime + " - Assigned to slot " + slotDisplay + " [" + status + "]");
-    vehicleService.addVehicle(newVehicle);
+                vehicleNumber,
+                ownerName,
+                vehicleType,
+                slotDisplay,
+                entryTime,
+                "--",
+                status
+        );
+        newVehicle.addHistory(entryTime + " - Vehicle registered in system");
+        newVehicle.addHistory(entryTime + " - Assigned to slot " + slotDisplay + " [" + status + "]");
+        newVehicle.addSlotVisit(slotDisplay);
+        vehicleService.addVehicle(newVehicle);
 
         if (freeSlot != null) {
             freeSlot.assignVehicle(vehicleNumber);
             freeSlot.setLastEntryTime(entryTime);
             freeSlot.setLastExitTime("--");
+            freeSlot.addHistory(entryTime + " - Vehicle " + vehicleNumber + " parked in " + freeSlot.getDisplaySlotId());
 
             if (showMessage) {
                 JOptionPane.showMessageDialog(this,
@@ -315,7 +329,6 @@ public class VehiclePanel extends JPanel {
     }
 
     private void removeSelectedVehicle() {
-        String exitTime = getCurrentSystemTime();
         int selectedViewRow = vehicleTable.getSelectedRow();
 
         if (selectedViewRow == -1) {
@@ -324,14 +337,19 @@ public class VehiclePanel extends JPanel {
         }
 
         int selectedModelRow = vehicleTable.convertRowIndexToModel(selectedViewRow);
-        List<Vehicle> vehicles = vehicleService.getAllVehicles();
+        String vehicleNumber = String.valueOf(tableModel.getValueAt(selectedModelRow, 0));
+        Vehicle selectedVehicle = vehicleService.getVehicleByNumber(vehicleNumber);
 
-        if (selectedModelRow < 0 || selectedModelRow >= vehicles.size()) {
-            JOptionPane.showMessageDialog(this, "Invalid vehicle selection.");
+        if (selectedVehicle == null) {
+            JOptionPane.showMessageDialog(this, "Vehicle record not found.");
             return;
         }
 
-        Vehicle selectedVehicle = vehicles.get(selectedModelRow);
+        if ("Exited".equalsIgnoreCase(selectedVehicle.getStatus())) {
+            JOptionPane.showMessageDialog(this, "This vehicle is already marked as exited.");
+            return;
+        }
+
         int confirm = JOptionPane.showConfirmDialog(
                 this,
                 "Exit vehicle " + selectedVehicle.getVehicleNumber() + " and release its slot?",
@@ -340,10 +358,14 @@ public class VehiclePanel extends JPanel {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
+            String exitTime = getCurrentSystemTime();
+            String slotDisplay = selectedVehicle.getSlotId();
+
             releaseSlotByVehicle(selectedVehicle.getVehicleNumber(), exitTime);
             selectedVehicle.setExitTime(exitTime);
             selectedVehicle.setStatus("Exited");
-            selectedVehicle.addHistory(exitTime + " - Vehicle exited from slot " + selectedVehicle.getSlotId() + " [Exited]");
+            selectedVehicle.addHistory(exitTime + " - Vehicle exited from slot " + slotDisplay + " [Exited]");
+
             refreshTable();
 
             if (onDataChanged != null) {
@@ -359,56 +381,221 @@ public class VehiclePanel extends JPanel {
             if (!slot.isAvailable() && vehicleNumber.equalsIgnoreCase(slot.getOccupiedVehicleNumber())) {
                 slot.releaseSlot();
                 slot.setLastExitTime(exitTime);
+                slot.addHistory(exitTime + " - Vehicle " + vehicleNumber + " exited from " + slot.getDisplaySlotId());
                 break;
             }
         }
     }
 
-    private void showVehicleHistory() {
+    private void showVehicleDetails() {
         int selectedViewRow = vehicleTable.getSelectedRow();
         if (selectedViewRow == -1) {
             return;
         }
-    
+
         int selectedModelRow = vehicleTable.convertRowIndexToModel(selectedViewRow);
-        List<Vehicle> vehicles = vehicleService.getAllVehicles();
-    
-        if (selectedModelRow < 0 || selectedModelRow >= vehicles.size()) {
+        String vehicleNumber = String.valueOf(tableModel.getValueAt(selectedModelRow, 0));
+        Vehicle selectedVehicle = vehicleService.getVehicleByNumber(vehicleNumber);
+
+        if (selectedVehicle == null) {
             return;
         }
-    
-        Vehicle selectedVehicle = vehicles.get(selectedModelRow);
-    
-        StringBuilder historyText = new StringBuilder();
-        for (String event : selectedVehicle.getHistory()) {
-            historyText.append(event).append("\n");
+
+        List<Reservation> reservations = reservationService.getReservationsByVehicle(selectedVehicle.getVehicleNumber());
+
+        Object[] options = {"Current & Last Info", "View 6-Month History", "Close"};
+        int choice = JOptionPane.showOptionDialog(
+                this,
+                "Vehicle Number: " + selectedVehicle.getVehicleNumber() +
+                        "\nOwner: " + selectedVehicle.getOwnerName() +
+                        "\nType: " + selectedVehicle.getVehicleType() +
+                        "\nCurrent/Last Slot: " + selectedVehicle.getSlotId() +
+                        "\nEntry Time: " + selectedVehicle.getEntryTime() +
+                        "\nExit Time: " + selectedVehicle.getExitTime() +
+                        "\nStatus: " + selectedVehicle.getStatus() +
+                        "\nReservations Found: " + reservations.size(),
+                "Vehicle Details",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[2]
+        );
+
+        if (choice == 0) {
+            showCurrentAndLastInfo(selectedVehicle, reservations);
+        } else if (choice == 1) {
+            showVehicleHistoryDialog(selectedVehicle, reservations);
         }
-    
+    }
+
+    private void showCurrentAndLastInfo(Vehicle selectedVehicle, List<Reservation> reservations) {
+        List<String> slotHistory = vehicleService.getSlotHistoryForVehicle(selectedVehicle.getVehicleNumber());
+        String currentSlot = vehicleService.getCurrentSlotForVehicle(selectedVehicle.getVehicleNumber());
+        String lastVisitedSlot = selectedVehicle.getLastVisitedSlot();
+
+        StringBuilder slotText = new StringBuilder();
+        if (slotHistory == null || slotHistory.isEmpty()) {
+            slotText.append("- No slot history found.\n");
+        } else {
+            for (String slot : slotHistory) {
+                slotText.append("- ").append(slot).append("\n");
+            }
+        }
+
+        StringBuilder reservationText = new StringBuilder();
+        if (reservations == null || reservations.isEmpty()) {
+            reservationText.append("- No reservations found for this vehicle.\n");
+        } else {
+            for (Reservation reservation : reservations) {
+                reservationText.append("- ")
+                        .append(reservation.getReservationId())
+                        .append(" | Slot: ")
+                        .append(reservation.getSlotId())
+                        .append(" | Time: ")
+                        .append(reservation.getReservationTime())
+                        .append(" | Status: ")
+                        .append(reservation.getStatus())
+                        .append("\n");
+            }
+        }
+
         JTextArea textArea = new JTextArea(
                 "Vehicle Number: " + selectedVehicle.getVehicleNumber() +
-                "\nOwner: " + selectedVehicle.getOwnerName() +
-                "\nType: " + selectedVehicle.getVehicleType() +
-                "\nCurrent/Last Slot: " + selectedVehicle.getSlotId() +
-                "\nEntry Time: " + selectedVehicle.getEntryTime() +
-                "\nExit Time: " + selectedVehicle.getExitTime() +
-                "\nStatus: " + selectedVehicle.getStatus() +
-                "\n\nHistory:\n" + historyText
+                        "\nOwner: " + selectedVehicle.getOwnerName() +
+                        "\nType: " + selectedVehicle.getVehicleType() +
+                        "\nCurrent Slot: " + currentSlot +
+                        "\nLast Visited Slot: " + (lastVisitedSlot != null ? lastVisitedSlot : "-") +
+                        "\nEntry Time: " + selectedVehicle.getEntryTime() +
+                        "\nExit Time: " + selectedVehicle.getExitTime() +
+                        "\nStatus: " + selectedVehicle.getStatus() +
+                        "\n\nSlots Used:\n" + slotText +
+                        "\nReservations Made:\n" + reservationText
         );
-    
+
         textArea.setEditable(false);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textArea.setBackground(UIHelper.PANEL_BG);
         textArea.setForeground(UIHelper.TEXT_PRIMARY);
-    
+
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(520, 320));
-    
+        scrollPane.setPreferredSize(new Dimension(620, 360));
+
         JOptionPane.showMessageDialog(
                 this,
                 scrollPane,
-                "Vehicle History",
+                "Current and Last Vehicle Information",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    private void showVehicleHistoryDialog(Vehicle selectedVehicle, List<Reservation> reservations) {
+        StringBuilder historyText = new StringBuilder();
+        historyText.append("6-Month Vehicle History for ").append(selectedVehicle.getVehicleNumber()).append("\n\n");
+        historyText.append("Owner: ").append(selectedVehicle.getOwnerName()).append("\n");
+        historyText.append("Type: ").append(selectedVehicle.getVehicleType()).append("\n");
+        historyText.append("Current/Last Slot: ").append(selectedVehicle.getSlotId()).append("\n");
+        historyText.append("Entry Time: ").append(selectedVehicle.getEntryTime()).append("\n");
+        historyText.append("Exit Time: ").append(selectedVehicle.getExitTime()).append("\n");
+        historyText.append("Status: ").append(selectedVehicle.getStatus()).append("\n\n");
+
+        historyText.append("Slots Used:\n");
+        List<String> slotHistory = vehicleService.getSlotHistoryForVehicle(selectedVehicle.getVehicleNumber());
+        if (slotHistory == null || slotHistory.isEmpty()) {
+            historyText.append("- No slot usage history found.\n");
+        } else {
+            for (String slot : slotHistory) {
+                historyText.append("- ").append(slot).append("\n");
+            }
+        }
+
+        historyText.append("\nReservations Made:\n");
+        if (reservations == null || reservations.isEmpty()) {
+            historyText.append("- No reservation history found.\n");
+        } else {
+            for (Reservation reservation : reservations) {
+                historyText.append("- ")
+                        .append(reservation.getReservationId())
+                        .append(" | Slot: ")
+                        .append(reservation.getSlotId())
+                        .append(" | Time: ")
+                        .append(reservation.getReservationTime())
+                        .append(" | Status: ")
+                        .append(reservation.getStatus())
+                        .append("\n");
+            }
+        }
+
+        historyText.append("\nVehicle Event History:\n");
+        List<String> events = vehicleService.getEventHistoryForVehicle(selectedVehicle.getVehicleNumber());
+        if (events == null || events.isEmpty()) {
+            historyText.append("- No vehicle event history found.\n");
+        } else {
+            for (String event : events) {
+                historyText.append("- ").append(event).append("\n");
+            }
+        }
+
+        JTextArea textArea = new JTextArea(historyText.toString());
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        textArea.setBackground(UIHelper.PANEL_BG);
+        textArea.setForeground(UIHelper.TEXT_PRIMARY);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(650, 390));
+
+        JOptionPane.showMessageDialog(
+                this,
+                scrollPane,
+                "6-Month Vehicle History",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    private void searchVehicleHistory() {
+        String query = JOptionPane.showInputDialog(this, "Enter vehicle number to search in 6-month history:");
+        if (query == null || query.trim().isEmpty()) {
+            return;
+        }
+
+        List<Vehicle> matchedVehicles = vehicleService.searchVehiclesInHistory(query.trim());
+        if (matchedVehicles.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No vehicle found in 6-month history.");
+            return;
+        }
+
+        StringBuilder resultText = new StringBuilder();
+        resultText.append("Matching Vehicles in 6-Month History:\n\n");
+
+        for (Vehicle vehicle : matchedVehicles) {
+            resultText.append("Vehicle: ").append(vehicle.getVehicleNumber())
+                    .append(" | Owner: ").append(vehicle.getOwnerName())
+                    .append(" | Type: ").append(vehicle.getVehicleType())
+                    .append(" | Current/Last Slot: ").append(vehicle.getSlotId())
+                    .append(" | Status: ").append(vehicle.getStatus())
+                    .append("\n");
+        }
+
+        JTextArea textArea = new JTextArea(resultText.toString());
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        textArea.setBackground(UIHelper.PANEL_BG);
+        textArea.setForeground(UIHelper.TEXT_PRIMARY);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(620, 300));
+
+        JOptionPane.showMessageDialog(
+                this,
+                scrollPane,
+                "Vehicle History Search",
                 JOptionPane.INFORMATION_MESSAGE
         );
     }

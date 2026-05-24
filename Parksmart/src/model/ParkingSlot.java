@@ -8,6 +8,7 @@ public class ParkingSlot {
     private String displaySlotId;
     private String blockName;
     private String slotGroup;
+    private String slotNumber;
     private String slotType;
     private String status;
     private boolean available;
@@ -18,16 +19,17 @@ public class ParkingSlot {
     private List<String> history;
 
     public ParkingSlot(int slotId,
-                       String displaySlotId,
                        String blockName,
                        String slotGroup,
+                       String slotNumber,
                        String slotType,
                        String status,
                        boolean available) {
         this.slotId = slotId;
-        this.displaySlotId = displaySlotId;
         this.blockName = blockName;
         this.slotGroup = slotGroup;
+        this.slotNumber = slotNumber;
+        this.displaySlotId = blockName + "-" + slotNumber;
         this.slotType = slotType;
         this.status = status;
         this.available = available;
@@ -54,6 +56,10 @@ public class ParkingSlot {
 
     public String getSlotGroup() {
         return slotGroup;
+    }
+
+    public String getSlotNumber() {
+        return slotNumber;
     }
 
     public String getSlotType() {
@@ -123,7 +129,7 @@ public class ParkingSlot {
             this.status = "Occupied";
         }
 
-        this.history.add("Vehicle " + vehicleNumber + " assigned to slot [" + this.status + "]");
+        this.history.add("Vehicle " + vehicleNumber + " assigned to slot [" + displaySlotId + "] with status [" + this.status + "]");
     }
 
     public void releaseSlot() {
@@ -134,9 +140,9 @@ public class ParkingSlot {
         this.status = "Available";
 
         if (previousVehicle != null && !previousVehicle.isEmpty()) {
-            this.history.add("Vehicle " + previousVehicle + " released from slot [Available]");
+            this.history.add("Vehicle " + previousVehicle + " released from slot [" + displaySlotId + "]");
         } else {
-            this.history.add("Slot released and marked [Available]");
+            this.history.add("Slot [" + displaySlotId + "] released and marked [Available]");
         }
     }
 }
