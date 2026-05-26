@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkSmart</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: #132238;
+            --panel-2: #1a2d48;
+            --text: #e8f1ff;
+            --muted: #a9bdd6;
+            --accent: #2ec4ff;
+            --border: #31506f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1220, #142742);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        .hero,
+        .card {
+            background: rgba(19, 34, 56, 0.92);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .hero {
+            padding: 36px;
+            margin-bottom: 24px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            max-width: 760px;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .badge {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 22px;
+        }
+
+        ul {
+            padding-left: 18px;
+        }
+
+        code,
+        pre {
+            background: #0d1a2d;
+            border: 1px solid #243e5b;
+            border-radius: 10px;
+        }
+
+        pre {
+            padding: 14px;
+            overflow-x: auto;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .shots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .shot {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .placeholder {
+            height: 170px;
+            border-radius: 10px;
+            border: 1px dashed #4d6d8f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            background: #101c30;
+        }
+
+        .footer {
+            color: var(--muted);
+            margin-top: 26px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="hero">
+            <h1>ParkSmart</h1>
+            <p class="subtitle">
+                ParkSmart is a Java Swing smart parking management project focused on DSA implementation, role-based access, route finding, slot handling, vehicle tracking, reservations, and analytics.
+            </p>
+
+            <div class="badges">
+                <span class="badge">Java Swing</span>
+                <span class="badge">DSA Project</span>
+                <span class="badge">Shortest Path</span>
+                <span class="badge">Parking Analytics</span>
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="card">
+                <h2>Overview</h2>
+                <p>
+                    The project models a smart parking environment using modular Java packages for GUI, services, models, and DSA logic. It supports route visualization, vehicle and slot history, reservation workflows, and live dashboard metrics.
+                </p>
+            </section>
+
+            <section class="card">
+                <h2>Key Features</h2>
+                <ul>
+                    <li>Admin and staff login flow</li>
+                    <li>Dashboard and analytics panels</li>
+                    <li>Slot, vehicle, and reservation management</li>
+                    <li>Shortest path route visualizer</li>
+                    <li>History tracking and filtering</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>DSA Concepts</h2>
+                <ul>
+                    <li>Graphs for parking map modeling</li>
+                    <li>Shortest path algorithms for route finding</li>
+                    <li>Sorting and filtering for records</li>
+                    <li>Greedy and optimization ideas in analytics</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2>Run Instructions</h2>
+                <pre><code>javac --release 8 -d out -sourcepath src src/app/Main.java
+java -cp out app.Main</code></pre>
+                <p>
+                    Repository link:
+                    <a href="https://github.com/TAditya007/SEM-3-Project-ParkSmart-" target="_blank" rel="noopener noreferrer">
+                        GitHub Repository
+                    </a>
+                </p>
+            </section>
+        </div>
+
+        <section class="card" style="margin-top: 24px;">
+            <h2>Screenshots</h2>
+            <div class="shots">
+                <div class="shot">
+                    <h3>Login</h3>
+                    <div class="placeholder">Add screenshots/login.png</div>
+                </div>
+                <div class="shot">
+                    <h3>Dashboard</h3>
+                    <div class="placeholder">Add screenshots/dashboard.png</div>
+                </div>
+                <div class="shot">
+                    <h3>Route Panel</h3>
+                    <div class="placeholder">Add screenshots/route-panel.png</div>
+                </div>
+            </div>
+        </section>
+
+        <p class="footer">ParkSmart GitHub starter site</p>
+    </div>
+</body>
+</html>
