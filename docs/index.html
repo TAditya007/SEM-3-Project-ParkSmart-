@@ -1,226 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParkSmart</title>
-    <style>
-        :root {
-            --bg: #0b1220;
-            --panel: #132238;
-            --panel-2: #1a2d48;
-            --text: #e8f1ff;
-            --muted: #a9bdd6;
-            --accent: #2ec4ff;
-            --border: #31506f;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0b1220, #142742);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 32px 20px 60px;
-        }
-
-        .hero,
-        .card {
-            background: rgba(19, 34, 56, 0.92);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-        }
-
-        .hero {
-            padding: 36px;
-            margin-bottom: 24px;
-        }
-
-        h1,
-        h2,
-        h3 {
-            margin-top: 0;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: var(--muted);
-            max-width: 760px;
-        }
-
-        .badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        .badge {
-            background: var(--panel-2);
-            border: 1px solid var(--border);
-            color: var(--accent);
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 0.95rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            padding: 22px;
-        }
-
-        ul {
-            padding-left: 18px;
-        }
-
-        code,
-        pre {
-            background: #0d1a2d;
-            border: 1px solid #243e5b;
-            border-radius: 10px;
-        }
-
-        pre {
-            padding: 14px;
-            overflow-x: auto;
-        }
-
-        a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .shots {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 18px;
-        }
-
-        .shot {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 14px;
-        }
-
-        .placeholder {
-            height: 170px;
-            border-radius: 10px;
-            border: 1px dashed #4d6d8f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--muted);
-            background: #101c30;
-        }
-
-        .footer {
-            color: var(--muted);
-            margin-top: 26px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ParkSmart | Smart Parking DSA Project</title>
+  <meta name="description" content="ParkSmart is a Java Swing smart parking management system built as an academic DSA project with graphs, shortest path algorithms, slot management, vehicle tracking, reservations, analytics, and admin/staff workflows.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="container">
-        <section class="hero">
-            <h1>ParkSmart</h1>
-            <p class="subtitle">
-                ParkSmart is a Java Swing smart parking management project focused on DSA implementation, role-based access, route finding, slot handling, vehicle tracking, reservations, and analytics.
-            </p>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-            <div class="badges">
-                <span class="badge">Java Swing</span>
-                <span class="badge">DSA Project</span>
-                <span class="badge">Shortest Path</span>
-                <span class="badge">Parking Analytics</span>
-            </div>
-        </section>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <div>
+          <p class="eyebrow">Academic Java Project</p>
+          <h1>ParkSmart</h1>
+        </div>
+      </div>
 
-        <div class="grid">
-            <section class="card">
-                <h2>Overview</h2>
-                <p>
-                    The project models a smart parking environment using modular Java packages for GUI, services, models, and DSA logic. It supports route visualization, vehicle and slot history, reservation workflows, and live dashboard metrics.
-                </p>
-            </section>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#overview">Overview</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#use-cases">Use Cases</a>
+        <a href="#screens">Screens</a>
+        <a href="#run">Run</a>
+      </nav>
 
-            <section class="card">
-                <h2>Key Features</h2>
-                <ul>
-                    <li>Admin and staff login flow</li>
-                    <li>Dashboard and analytics panels</li>
-                    <li>Slot, vehicle, and reservation management</li>
-                    <li>Shortest path route visualizer</li>
-                    <li>History tracking and filtering</li>
-                </ul>
-            </section>
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+        <span>Theme</span>
+      </button>
+    </div>
+  </header>
 
-            <section class="card">
-                <h2>DSA Concepts</h2>
-                <ul>
-                    <li>Graphs for parking map modeling</li>
-                    <li>Shortest path algorithms for route finding</li>
-                    <li>Sorting and filtering for records</li>
-                    <li>Greedy and optimization ideas in analytics</li>
-                </ul>
-            </section>
+  <main id="main-content">
+    <section class="hero section">
+      <div class="container hero-grid">
+        <div>
+          <p class="section-tag">Smart Parking + Data Structures</p>
+          <h2 class="hero-title">A Java Swing parking management system built to demonstrate real DSA usage in an academic workflow.</h2>
+          <p class="hero-text">
+            ParkSmart combines parking slot administration, vehicle handling, reservation tracking, route visualization, and analytics into one desktop application. The project is designed around DSA implementation, especially graph-based routing, shortest path logic, structured data handling, searching, sorting, and modular service-driven design. [file:2][cite:57]
+          </p>
 
-            <section class="card">
-                <h2>Run Instructions</h2>
-                <pre><code>javac --release 8 -d out -sourcepath src src/app/Main.java
-java -cp out app.Main</code></pre>
-                <p>
-                    Repository link:
-                    <a href="https://github.com/TAditya007/SEM-3-Project-ParkSmart-" target="_blank" rel="noopener noreferrer">
-                        GitHub Repository
-                    </a>
-                </p>
-            </section>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#run">Run Project</a>
+            <a class="btn btn-secondary" href="#screens">View Screens</a>
+          </div>
+
+          <div class="hero-stats">
+            <article class="stat-card">
+              <span class="stat-label">Platform</span>
+              <strong>Java Swing</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Focus</span>
+              <strong>DSA + GUI</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Modules</span>
+              <strong>Slots, Vehicles, Reservations, Routes, Analytics</strong>
+            </article>
+          </div>
         </div>
 
-        <section class="card" style="margin-top: 24px;">
-            <h2>Screenshots</h2>
-            <div class="shots">
-                <div class="shot">
-                    <h3>Login</h3>
-                    <img src="../Parksmart/screenshots/login.png" alt="ParkSmart login screen" style="width: 100%; border-radius: 10px;">
-                </div>
-                <div class="shot">
-                    <h3>Dashboard</h3>
-                    <img src="../Parksmart/screenshots/dashboard.png" alt="ParkSmart dashboard" style="width: 100%; border-radius: 10px;">
-                </div>
-                <div class="shot">
-                    <h3>Route Panel</h3>
-                    <img src="../Parksmart/screenshots/route-panel.png" alt="ParkSmart route panel" style="width: 100%; border-radius: 10px;">
-                </div>
-            </div>
-        </section>
+        <aside class="hero-panel">
+          <h3>Project Summary</h3>
+          <ul class="info-list">
+            <li>Built as an academic smart parking system in Java with GUI and DSA emphasis. [file:2][cite:57]</li>
+            <li>Uses graphs and shortest-path logic for route generation inside the parking layout. [file:2][cite:17]</li>
+            <li>Follows modular package structure with app, gui, model, service, and dsa layers. [file:1][file:2]</li>
+            <li>Supports admin and staff workflows through a desktop management interface. [file:2]</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
 
-        <p class="footer">ParkSmart GitHub starter site</p>
+    <section id="overview" class="section">
+      <div class="container narrow">
+        <p class="section-tag">Overview</p>
+        <h2>Project purpose</h2>
+        <p>
+          ParkSmart is designed to model a smart parking environment where users can manage slot allocation, vehicle entry records, reservations, and navigation inside a parking system. The academic value of the project comes from mapping real parking operations to practical data structure and algorithm use rather than only building a frontend. [file:2][cite:57]
+        </p>
+        <p>
+          The system demonstrates how routing, occupancy management, history tracking, filtering, and analytics can be organized in a clean Java architecture. The project also shows how GUI panels can remain separated from business logic by delegating operations to service and DSA layers. [file:1][file:2]
+        </p>
+      </div>
+    </section>
+
+    <section id="architecture" class="section alt-section">
+      <div class="container">
+        <p class="section-tag">Architecture</p>
+        <h2>Module and package structure</h2>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Core packages</h3>
+            <ul class="info-list">
+              <li><strong>app</strong> handles startup and main entry flow. [file:1]</li>
+              <li><strong>gui</strong> contains panels such as dashboard, slots, vehicles, reservations, routes, and analytics. [file:1]</li>
+              <li><strong>model</strong> stores entities like parking slots, vehicles, reservations, and route data. [file:1]</li>
+              <li><strong>service</strong> contains business rules and connects GUI to data and algorithms. [file:1][file:2]</li>
+              <li><strong>dsa</strong> contains graph structures, shortest path algorithms, trees, and optimization-related logic. [file:1][file:2]</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Major project modules</h3>
+            <ul class="info-list">
+              <li>Dashboard for occupancy and quick summary information.</li>
+              <li>Slot management for parking allocation and status updates.</li>
+              <li>Vehicle management for search, tracking, and history viewing.</li>
+              <li>Reservation management for booking and status handling.</li>
+              <li>Route visualizer for shortest path guidance on the parking map.</li>
+              <li>Analytics for occupancy trends, block usage, and operational insights. [file:2]</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="grid three">
+          <article class="mini-card">
+            <h3>Graph modeling</h3>
+            <p>The parking layout is modeled as connected nodes and edges so route computation can use graph traversal and shortest-path logic. [file:2][cite:17]</p>
+          </article>
+          <article class="mini-card">
+            <h3>Service layer</h3>
+            <p>Services isolate data and algorithm operations from Swing UI code, helping maintain cleaner separation of responsibilities. [file:1][file:2]</p>
+          </article>
+          <article class="mini-card">
+            <h3>GUI integration</h3>
+            <p>The interface presents DSA results in a usable form through Java Swing panels and interactive workflows. [file:1]</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <p class="section-tag">DSA Coverage</p>
+        <h2>Academic concepts implemented</h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Concept</th>
+                <th>How it is used in ParkSmart</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Graphs</td>
+                <td>Models parking blocks, entrances, exits, and navigable route connections. [file:2][cite:17]</td>
+              </tr>
+              <tr>
+                <td>Shortest Path</td>
+                <td>Supports route generation from entrance to target parking block or slot. [file:2][cite:17]</td>
+              </tr>
+              <tr>
+                <td>Searching</td>
+                <td>Used in slot lookup, vehicle search, filtering, and reservation retrieval. [file:2]</td>
+              </tr>
+              <tr>
+                <td>Sorting</td>
+                <td>Useful for ordering records, history lists, and occupancy-related views. [file:2]</td>
+              </tr>
+              <tr>
+                <td>Trees / Structured Storage</td>
+                <td>The project architecture and design references tree-based DSA components such as BST/AVL style usage in academic context. [file:1][file:2]</td>
+              </tr>
+              <tr>
+                <td>Optimization</td>
+                <td>Applied conceptually for reservations, fee logic, route efficiency, and analytics improvements. [file:2]</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow" class="section alt-section">
+      <div class="container">
+        <p class="section-tag">Workflow</p>
+        <h2>System workflow</h2>
+
+        <div class="timeline">
+          <article class="timeline-item">
+            <span class="step">01</span>
+            <div>
+              <h3>Login and access</h3>
+              <p>Admin or staff enters the system and reaches the main dashboard for operational access. The role-based workflow determines which management tasks are available in the interface. [file:2]</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <span class="step">02</span>
+            <div>
+              <h3>Dashboard review</h3>
+              <p>Users review current occupancy, availability, and activity summaries before moving into a management task. This acts as the operational overview screen. [file:2]</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <span class="step">03</span>
+            <div>
+              <h3>Operational action</h3>
+              <p>Users move to slot, vehicle, or reservation modules to create, search, filter, update, or review records depending on the task. The GUI panels interact with services instead of directly embedding logic. [file:1][file:2]</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <span class="step">04</span>
+            <div>
+              <h3>Route assistance</h3>
+              <p>When navigation is needed, the route module calculates a shortest or suitable path through the parking graph and displays it visually. This connects academic graph theory to a practical parking use case. [file:2][cite:17]</p>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <span class="step">05</span>
+            <div>
+              <h3>Analytics and review</h3>
+              <p>Analytics summarizes usage patterns, occupancy distribution, and performance indicators so the system can provide decision support in addition to basic record management. [file:2]</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <p class="section-tag">User Flow</p>
+        <h2>Typical user journey</h2>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Admin flow</h3>
+            <ol class="ordered-list">
+              <li>Login to the system.</li>
+              <li>Review dashboard metrics and occupancy information.</li>
+              <li>Manage slots and update availability.</li>
+              <li>Inspect vehicle records and reservation details.</li>
+              <li>Use route visualization to verify path behavior.</li>
+              <li>Study analytics for decision support and reporting. [file:2]</li>
+            </ol>
+          </article>
+
+          <article class="card">
+            <h3>Staff flow</h3>
+            <ol class="ordered-list">
+              <li>Login and access operational panels.</li>
+              <li>Search for a slot or assigned reservation.</li>
+              <li>Register or verify vehicle details.</li>
+              <li>Guide parking movement using route output.</li>
+              <li>Update status after entry, parking, or exit. [file:2]</li>
+            </ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="use-cases" class="section alt-section">
+      <div class="container">
+        <p class="section-tag">Use Cases</p>
+        <h2>Main academic and system use cases</h2>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Functional use cases</h3>
+            <ul class="info-list">
+              <li>Add, edit, and inspect parking slot data.</li>
+              <li>Register incoming vehicles and maintain records.</li>
+              <li>Create and track reservations.</li>
+              <li>Find route from entrance to target block or parking area.</li>
+              <li>Check occupancy and parking statistics.</li>
+              <li>Review usage history and filtered records. [file:2]</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Academic use cases</h3>
+            <ul class="info-list">
+              <li>Demonstrate graph creation and adjacency modeling. [file:2][cite:17]</li>
+              <li>Show shortest path algorithm output in a visual interface. [file:2][cite:17]</li>
+              <li>Demonstrate searching and sorting on realistic domain data. [file:2]</li>
+              <li>Show modular software design with GUI, service, model, and DSA separation. [file:1][file:2]</li>
+              <li>Present real-world application of classroom DSA concepts in a parking domain. [file:2][cite:57]</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="run" class="section">
+      <div class="container">
+        <p class="section-tag">Execution</p>
+        <h2>How to run the project</h2>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Requirements</h3>
+            <ul class="info-list">
+              <li>Java JDK installed.</li>
+              <li>An IDE such as IntelliJ IDEA, Eclipse, or VS Code with Java support.</li>
+              <li>The ParkSmart source folder available locally.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Compile and run from terminal</h3>
+            <pre><code>javac --release 8 -d out -sourcepath src src/app/Main.java
+java -cp out app.Main</code></pre>
+            <p class="note">These commands compile the source code into the <code>out</code> folder and launch the main application entry point.</p>
+          </article>
+        </div>
+
+        <article class="card wide-card">
+          <h3>Run steps</h3>
+          <ol class="ordered-list">
+            <li>Open the ParkSmart project in your preferred Java IDE.</li>
+            <li>Verify the source structure and package names are intact.</li>
+            <li>Build the project using the IDE or terminal commands shown above.</li>
+            <li>Run <code>app.Main</code> as the application entry point. [file:1]</li>
+            <li>Login and move through dashboard, slots, vehicles, reservations, routes, and analytics panels.</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section class="section alt-section">
+      <div class="container narrow">
+        <p class="section-tag">Implementation Notes</p>
+        <h2>Key design decisions</h2>
+        <p>
+          The project is intentionally aligned with academic evaluation criteria that focus more on implementation of data structures and algorithms than on advanced frontend frameworks. For that reason, Java Swing is sufficient and appropriate because it allows the project to present interactive results while keeping the focus on DSA logic. [cite:57]
+        </p>
+        <p>
+          The modular split between GUI, services, models, and DSA classes also makes the system easier to explain during viva, review, and documentation. This is especially useful when justifying how route logic, occupancy handling, and record management are separated cleanly across the project. [file:1][file:2]
+        </p>
+      </div>
+    </section>
+
+    <section id="screens" class="section">
+      <div class="container">
+        <p class="section-tag">Screens</p>
+        <h2>Application screenshots</h2>
+        <p class="section-intro">
+          Place your images inside <code>docs/screenshots/</code> and keep the names exactly as used below so they render correctly on GitHub Pages.
+        </p>
+
+        <div class="gallery">
+          <figure class="shot-card">
+            <img src="screenshots/login.png" alt="ParkSmart login screen" width="1280" height="720" loading="lazy">
+            <figcaption>Login screen</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/dashboard.png" alt="ParkSmart dashboard panel" width="1280" height="720" loading="lazy">
+            <figcaption>Dashboard panel</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/slots.png" alt="ParkSmart slot management panel" width="1280" height="720" loading="lazy">
+            <figcaption>Slot management</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/vehicles.png" alt="ParkSmart vehicle management panel" width="1280" height="720" loading="lazy">
+            <figcaption>Vehicle management</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/reservations.png" alt="ParkSmart reservation management panel" width="1280" height="720" loading="lazy">
+            <figcaption>Reservation management</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/routes.png" alt="ParkSmart route visualizer panel" width="1280" height="720" loading="lazy">
+            <figcaption>Route visualizer</figcaption>
+          </figure>
+
+          <figure class="shot-card">
+            <img src="screenshots/analytics.png" alt="ParkSmart analytics panel" width="1280" height="720" loading="lazy">
+            <figcaption>Analytics panel</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt-section">
+      <div class="container">
+        <p class="section-tag">Troubleshooting</p>
+        <h2>Common issues</h2>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Screenshots not loading</h3>
+            <ul class="info-list">
+              <li>Make sure images are inside <code>docs/screenshots/</code>.</li>
+              <li>Make sure file names match exactly, including lowercase and extension.</li>
+              <li>Commit and push the screenshot files to the same branch used by GitHub Pages.</li>
+              <li>Wait a minute after pushing because Pages can take time to rebuild. [web:132]</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Pages site not updating</h3>
+            <ul class="info-list">
+              <li>Check repository Settings → Pages.</li>
+              <li>Keep source as <code>main</code> branch and <code>/docs</code> folder if your site is inside root <code>docs</code>. [web:132]</li>
+              <li>Ensure <code>index.html</code> is inside the selected published folder. [web:132]</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <div>
+        <h2>ParkSmart</h2>
+        <p>Java Swing academic project for smart parking management, DSA implementation, and GUI-based demonstration. [file:2][cite:57]</p>
+      </div>
+      <div>
+        <p class="footer-note">Prepared as a detailed project presentation page for GitHub Pages deployment.</p>
+      </div>
     </div>
+  </footer>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
