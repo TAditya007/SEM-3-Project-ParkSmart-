@@ -440,3 +440,31 @@ pre {
     padding-top: 56px;
   }
 }
+
+.missing-shot {
+    min-height: 320px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    color: var(--muted);
+    text-align: center;
+    padding: 24px;
+  }
+  
+  .missing-shot-inner strong {
+    display: block;
+    color: var(--text);
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+  }
+  
+  .missing-shot-inner p {
+    margin: 0 0 8px;
+  }
+  
+  .missing-shot-inner small,
+  .missing-shot-inner code {
+    word-break: break-word;
+  }

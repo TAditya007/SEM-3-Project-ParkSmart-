@@ -6,8 +6,13 @@
     function applyTheme(value) {
       root.setAttribute("data-theme", value);
       if (toggle) {
-        toggle.innerHTML = value === "dark" ? "<span>Light Mode</span>" : "<span>Dark Mode</span>";
-        toggle.setAttribute("aria-label", value === "dark" ? "Switch to light mode" : "Switch to dark mode");
+        toggle.innerHTML = value === "dark"
+          ? "<span>Light Mode</span>"
+          : "<span>Dark Mode</span>";
+        toggle.setAttribute(
+          "aria-label",
+          value === "dark" ? "Switch to light mode" : "Switch to dark mode"
+        );
       }
     }
   
@@ -20,23 +25,18 @@
       });
     }
   
-    document.querySelectorAll('img').forEach(function (img) {
-      img.addEventListener('error', function () {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'image-fallback';
-        wrapper.setAttribute('role', 'img');
-        wrapper.setAttribute('aria-label', img.alt || 'Image not available');
-        wrapper.style.minHeight = '220px';
-        wrapper.style.borderRadius = '14px';
-        wrapper.style.display = 'grid';
-        wrapper.style.placeItems = 'center';
-        wrapper.style.textAlign = 'center';
-        wrapper.style.padding = '24px';
-        wrapper.style.background = 'rgba(255,255,255,0.04)';
-        wrapper.style.border = '1px solid rgba(255,255,255,0.12)';
-        wrapper.style.color = '#aebbd8';
-        wrapper.textContent = 'Screenshot not found. Add the image inside docs/screenshots with the correct file name.';
-        img.replaceWith(wrapper);
+    document.querySelectorAll(".shot-card img").forEach(function (img) {
+      img.addEventListener("error", function () {
+        const fallback = document.createElement("div");
+        fallback.className = "missing-shot";
+        fallback.innerHTML = `
+          <div class="missing-shot-inner">
+            <strong>Screenshot missing</strong>
+            <p>This image could not be loaded by GitHub Pages.</p>
+            <small>Expected path: <code>${img.getAttribute("src")}</code></small>
+          </div>
+        `;
+        img.replaceWith(fallback);
       });
     });
   })();
