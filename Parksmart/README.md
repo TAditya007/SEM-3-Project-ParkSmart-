@@ -63,22 +63,21 @@ docs/         -> GitHub Pages site files
 
 ## Screenshots
 
-Add screenshots in the `screenshots/` folder and reference them here.
+### Login
 
-- Login page
-- Dashboard
-- Slot management
-- Vehicle management
-- Route panel
-- Analytics panel
+![Login](screenshots/login.png)
 
-Example markdown once screenshots are added:
+### Dashboard
 
-```md
+![Dashboard](screenshots/dashboard.png)
 
+### Route Panel
 
+![Route Panel](screenshots/route-panel.png)
 
-```
+### Analytics
+
+![Analytics](screenshots/analytics.png)
 
 ## GitHub Pages
 
